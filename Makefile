@@ -1,27 +1,38 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=frp
-PKG_VERSION:=0.65.0
+PKG_VERSION:=0.69.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/fatedier/frp/tar.gz/v${PKG_VERSION}?
-PKG_HASH:=skip
+PKG_SOURCE_URL:=https://codeload.github.com/fatedier/frp/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=b78879e74e44bb22805a8a4602c6f58b9f46971c003eb4079d5020f66e57ed37
 
 PKG_MAINTAINER:=Richard Yu <yurichard3839@gmail.com>
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_BUILD_DEPENDS:=golang/host
+PKG_BUILD_DEPENDS:=golang/host node/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/fatedier/frp
 GO_PKG_BUILD_PKG:=github.com/fatedier/frp/cmd/...
+GO_PKG_LDFLAGS:=-s -w
+GO_PKG_LDFLAGS_X:=github.com/fatedier/frp/pkg/util/version.version=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
+
+define Build/Compile
+	( \
+		$(MAKE) -C $(PKG_BUILD_DIR)/web/frpc install ; \
+		$(MAKE) -C $(PKG_BUILD_DIR)/web/frps install ; \
+		$(MAKE) -C $(PKG_BUILD_DIR) web ; \
+		$(call GoPackage/Build/Compile) ; \
+	)
+endef
 
 define Package/frp/install
 	$(INSTALL_DIR) $(1)/usr/bin/
